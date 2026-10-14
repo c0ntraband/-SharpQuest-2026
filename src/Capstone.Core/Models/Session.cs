@@ -9,6 +9,8 @@ namespace Capstone.Core.Models
 
         public DateTime? EndedAt { get; private set; }
 
+        public int Balance { get; private set; }
+
         public bool IsFinished => EndedAt is not null;
 
         public Session(string playerName, int startingCredits, DateTime startedAt)
@@ -19,6 +21,22 @@ namespace Capstone.Core.Models
             PlayerName = playerName;
             StartingCredits = startingCredits;
             StartedAt = startedAt;
+            Balance = startingCredits;
+        }
+
+        public void PlaceBet(int bet)
+        {
+            if (bet <= 0) throw new ArgumentException("The bet must be positive.", nameof(bet));
+            if (bet > Balance) throw new InvalidOperationException("The bet is above the balance.");
+
+            Balance -= bet;
+        }
+
+        public void Collect(int payout)
+        {
+            if (payout < 0) throw new ArgumentException("The payout can't be negative.", nameof(payout));
+
+            Balance += payout;
         }
 
         public void End(DateTime endedAt)
