@@ -1,11 +1,3 @@
-# SharpQuest checks — MANAGED FILE, do not edit.
-#
-# Runs on every push. This is the RECORD, not the fast loop: iterate locally with `sq test`,
-# push when it's green. This run is what your Contract score is read from.
-#
-# Before grading, it replaces contracts/ and the build settings with the official copies,
-# so the tests that run here are always the course's tests.
-
 name: SharpQuest checks
 
 on:
@@ -16,7 +8,7 @@ permissions:
   contents: read
 
 env:
-  SQ_UPSTREAM: x86bogdan/sharpquest-2026   # filled in by publish.cs for each cohort
+  SQ_UPSTREAM: x86bogdan/sharpquest-2026
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 

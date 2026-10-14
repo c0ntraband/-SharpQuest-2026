@@ -1,8 +1,4 @@
 #!/usr/bin/env sh
-# SharpQuest helper for Linux and macOS. Usage: sh sq.sh test | sh sq.sh update | sh sq.sh upload | sh sq.sh help
-# MANAGED FILE: `sq update` and CI replace it with the official copy.
-#
-# Finds dotnet even when it isn't on the PATH: on some lab PCs it only works inside Rider's terminal.
 
 DOTNET=$(command -v dotnet 2>/dev/null)
 if [ -z "$DOTNET" ]; then
@@ -15,7 +11,6 @@ if [ -z "$DOTNET" ]; then
   exit 127
 fi
 
-# The programs dotnet starts (sq itself, then dotnet test) need to find it too.
 REAL=$(readlink -f "$DOTNET" 2>/dev/null || echo "$DOTNET")
 if [ -z "$DOTNET_ROOT" ] && [ -d "$(dirname "$REAL")/sdk" ]; then
   DOTNET_ROOT=$(dirname "$REAL"); export DOTNET_ROOT
