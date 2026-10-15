@@ -2,16 +2,11 @@ using Capstone.Core.Models;
 
 namespace Capstone.Core
 {
-    public class SlotMachine
+    public class SlotMachine(int seed)
     {
         private static readonly Symbol[] Symbols = Enum.GetValues<Symbol>();
 
-        private readonly Random _random;
-
-        public SlotMachine(int seed)
-        {
-            _random = new Random(seed);
-        }
+        private readonly Random _random = new(seed);
 
         public Reels NextReels() => new(NextSymbol(), NextSymbol(), NextSymbol());
 

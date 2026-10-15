@@ -17,10 +17,10 @@ namespace Capstone.Core.Models
 
         public Spin(string id, DateTime time, int bet, Reels reels, int payout, int creditsAfter)
         {
-            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("A spin needs an Id.", nameof(id));
-            if (bet <= 0) throw new ArgumentException("The bet must be positive.", nameof(bet));
-            if (payout < 0) throw new ArgumentException("The payout can't be negative.", nameof(payout));
-            if (creditsAfter < 0) throw new ArgumentException("Credits can't go below zero.", nameof(creditsAfter));
+            ArgumentException.ThrowIfNullOrWhiteSpace(id);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bet);
+            ArgumentOutOfRangeException.ThrowIfNegative(payout);
+            ArgumentOutOfRangeException.ThrowIfNegative(creditsAfter);
 
             Id = id;
             Time = time;

@@ -2,24 +2,26 @@ namespace Capstone.Core.Models
 {
     public class Paytable : IPaytable
     {
-        private readonly Dictionary<Reels, int> _multipliers = new()
+        private const int CherryPairMultiplier = 2;
+
+        private static readonly Dictionary<Symbol, int> LineMultipliers = new()
         {
-            [new Reels(Symbol.Cherry, Symbol.Cherry, Symbol.Cherry)] = 5,
-            [new Reels(Symbol.Lemon, Symbol.Lemon, Symbol.Lemon)] = 10,
-            [new Reels(Symbol.Bell, Symbol.Bell, Symbol.Bell)] = 20,
-            [new Reels(Symbol.Bar, Symbol.Bar, Symbol.Bar)] = 50,
-            [new Reels(Symbol.Seven, Symbol.Seven, Symbol.Seven)] = 100,
+            [Symbol.Cherry] = 5,
+            [Symbol.Lemon] = 10,
+            [Symbol.Bell] = 20,
+            [Symbol.Bar] = 50,
+            [Symbol.Seven] = 100,
         };
 
         public int PayoutFor(Reels reels, int bet)
         {
             var line = CompletedLine(reels);
-            if (line is not null) return _multipliers[line.Value] * bet;
+            if (line is not null) return LineMultipliers[line.Value] * bet;
 
-            return CherriesWithWilds(reels) >= 2 ? 2 * bet : 0;
+            return CherriesWithWilds(reels) >= 2 ? CherryPairMultiplier * bet : 0;
         }
 
-        private static Reels? CompletedLine(Reels reels)
+        private static Symbol? CompletedLine(Reels reels)
         {
             var shown = new[] { reels.Left, reels.Middle, reels.Right }
                 .Where(s => s != Symbol.Wild)
@@ -28,8 +30,8 @@ namespace Capstone.Core.Models
 
             return shown.Count switch
             {
-                0 => new Reels(Symbol.Seven, Symbol.Seven, Symbol.Seven),
-                1 => new Reels(shown[0], shown[0], shown[0]),
+                0 => Symbol.Seven,
+                1 => shown[0],
                 _ => null,
             };
         }

@@ -15,8 +15,8 @@ namespace Capstone.Core.Models
 
         public Session(string playerName, int startingCredits, DateTime startedAt)
         {
-            if (string.IsNullOrWhiteSpace(playerName)) throw new ArgumentException("A session needs a player name.", nameof(playerName));
-            if (startingCredits <= 0) throw new ArgumentException("Starting credits must be positive.", nameof(startingCredits));
+            ArgumentException.ThrowIfNullOrWhiteSpace(playerName);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(startingCredits);
 
             PlayerName = playerName;
             StartingCredits = startingCredits;
@@ -26,7 +26,7 @@ namespace Capstone.Core.Models
 
         public void PlaceBet(int bet)
         {
-            if (bet <= 0) throw new ArgumentException("The bet must be positive.", nameof(bet));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bet);
             if (bet > Balance) throw new InvalidOperationException("The bet is above the balance.");
 
             Balance -= bet;
@@ -34,7 +34,7 @@ namespace Capstone.Core.Models
 
         public void Collect(int payout)
         {
-            if (payout < 0) throw new ArgumentException("The payout can't be negative.", nameof(payout));
+            ArgumentOutOfRangeException.ThrowIfNegative(payout);
 
             Balance += payout;
         }

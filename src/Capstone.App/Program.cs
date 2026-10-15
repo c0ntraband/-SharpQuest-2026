@@ -9,9 +9,9 @@ var machine = new SlotMachine(seed: 7);
 var paytable = new Paytable();
 var spins = new SpinCollection();
 
+const int bet = 5;
 for (var i = 1; i <= 10; i++)
 {
-    const int bet = 5;
     var reels = machine.NextReels();
     var payout = paytable.PayoutFor(reels, bet);
 
