@@ -2,8 +2,10 @@ using SharpQuest.Contracts.Tests.Support;
 
 namespace SharpQuest.Contracts.Tests.Lab02;
 
+/// <summary>Lab 02: the behaviour promised by <see cref="IItemStore"/> and <see cref="ILab02Wiring.CreateSample"/>.</summary>
 public class StoreTests
 {
+    // Resolved inside each test (not in the constructor) so a missing wiring class skips the test.
     private ILab02Wiring? _wiringCache;
     private ILab02Wiring Wiring => _wiringCache ??= StudentCode.Wiring<ILab02Wiring>();
 
@@ -73,7 +75,7 @@ public class StoreTests
 
         var shouted = item.Id.ToUpperInvariant();
         if (shouted == item.Id) shouted = item.Id.ToLowerInvariant();
-        if (shouted == item.Id) return;
+        if (shouted == item.Id) return; // an Id with no letters can't be tested this way
 
         Assert.True(store.FindById(shouted) is null,
             $"FindById(\"{shouted}\") found the item stored as \"{item.Id}\". Ids are case-sensitive: use StringComparer.Ordinal.");

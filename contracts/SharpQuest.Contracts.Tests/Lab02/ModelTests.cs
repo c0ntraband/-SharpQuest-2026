@@ -2,6 +2,10 @@ using SharpQuest.Contracts.Tests.Support;
 
 namespace SharpQuest.Contracts.Tests.Lab02;
 
+/// <summary>
+/// Lab 02, required feature: "3+ types, 1 enum, 1 interface, zero nullable warnings".
+/// Zero nullable warnings is enforced by the build itself (Directory.Build.props), not here.
+/// </summary>
 public class ModelTests
 {
     [Fact]
@@ -53,6 +57,7 @@ public class ModelTests
         Assert.Equal(StudentCode.AssemblyName, item.GetType().Assembly.GetName().Name);
     }
 
+    // The shape checks don't need the wiring, but a lab without one counts as not started.
     private static void Started() => StudentCode.Wiring<ILab02Wiring>();
 
     private static string Names(IEnumerable<Type> types) =>

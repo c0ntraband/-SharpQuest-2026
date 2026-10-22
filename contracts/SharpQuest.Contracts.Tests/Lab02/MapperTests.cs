@@ -3,8 +3,10 @@ using SharpQuest.Contracts.Tests.Support;
 
 namespace SharpQuest.Contracts.Tests.Lab02;
 
+/// <summary>Lab 02: JSON mapping through <see cref="IItemMapper"/>.</summary>
 public class MapperTests
 {
+    // Resolved inside each test (not in the constructor) so a missing wiring class skips the test.
     private ILab02Wiring? _wiringCache;
     private ILab02Wiring Wiring => _wiringCache ??= StudentCode.Wiring<ILab02Wiring>();
 
@@ -67,6 +69,7 @@ public class MapperTests
         var json = mapper.ToJson(Wiring.CreateSample(1));
         var id = Wiring.CreateSample(1).Id;
 
+        // Replace the id value wherever it appears as a JSON string.
         var blanked = json.Replace(JsonSerializer.Serialize(id), "\"\"");
         Assert.True(json != blanked, $"Could not find the Id {JsonSerializer.Serialize(id)} as a JSON string in: {json}");
 

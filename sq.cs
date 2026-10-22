@@ -1,3 +1,16 @@
+// sq — the SharpQuest helper.
+//
+//   sq test            build, run every test, show a per-lab summary
+//   sq test 02         only Lab 02's contract tests
+//   sq update          fetch the latest contracts, reference solutions and catch-up kits
+//   sq report          show the last results again, without re-running
+//   (from Lab 03 on, sq test also runs your tests against deliberately broken code: see contracts/**/mutation.json)
+//   sq help
+//
+// `sq` is a shortcut for `dotnet run --project tools/sq -- ...` (see sq.cmd and sq.sh).
+// It is built as a small project, not run with `dotnet run --file`, because that needs a .NET 10 SDK and the lab PCs have .NET 9.
+// MANAGED FILE: `sq update` and CI replace it with the official copy.
+
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Security.Cryptography;
@@ -46,8 +59,18 @@ static class Commands
         return 0;
     }
 
+    // ---------------------------------------------------------------- sq upload
+    // For students without git: a lab PC, a browser, the repository downloaded as a ZIP. GitHub's upload page
+    // takes files and folders dragged onto it, but it doesn't read .gitignore, so dragging src/ would also send
+    // bin/, obj/ and database files. This copies exactly what belongs in the repository into .sq/upload/.
+
+    /// <summary>Folders uploaded whole (minus build output). tools/ holds tools/sq/sq.csproj.</summary>
     static readonly string[] UploadFolders = ["src", "tests", "tools"];
 
+    /// <summary>
+    /// Single files. The build settings and sq are managed (CI replaces them anyway); they go up so that the
+    /// next ZIP you download builds on a lab PC without running the .NET 9 fix again.
+    /// </summary>
     static readonly string[] UploadFiles =
     [
         "README.md", "SharpQuest.slnx", "Directory.Packages.local.props",
@@ -64,11 +87,12 @@ static class Commands
         || name.EndsWith(".suo", StringComparison.OrdinalIgnoreCase)
         || name is ".env" or "http-client.private.env.json" or ".DS_Store" or "Thumbs.db" or "desktop.ini";
 
+    /// <summary>GitHub's upload page takes at most 100 files at a time.</summary>
     const int UploadLimit = 100;
 
     public static int Upload(string root)
     {
-        var files = new List<string>();
+        var files = new List<string>();   // relative, '/' separated
         foreach (var folder in UploadFolders)
             if (Directory.Exists(Path.Combine(root, folder))) CollectUpload(root, folder, files);
         foreach (var file in UploadFiles)
@@ -79,6 +103,7 @@ static class Commands
             return 1;
         }
 
+        // Keep each project folder together (src/Capstone.Core, tests/Capstone.Tests, ...) and fill parts of up to 100.
         var groups = files.GroupBy(f => f.Split('/') is [var a, var b, _, ..] ? a + "/" + b : f).ToList();
         var parts = new List<List<string>>();
         foreach (var g in groups)
@@ -131,6 +156,7 @@ static class Commands
         }
     }
 
+    /// <summary>Opens the folder in the file manager, if there is one. Failing quietly is fine: the path is printed.</summary>
     static void OpenFolder(string path)
     {
         try
@@ -146,9 +172,14 @@ static class Commands
         }
         catch (Exception)
         {
+            // no file manager: the printed path is enough
         }
     }
 
+    /// <summary>
+    /// What `sq test` builds and runs. Everything the score comes from, and nothing else —
+    /// a UI project, a spike or a scratch console app in the solution can't take the grade down with it.
+    /// </summary>
     public static readonly string[] GradedProjects =
     [
         Path.Combine("contracts", "SharpQuest.Contracts.Tests", "SharpQuest.Contracts.Tests.csproj"),
@@ -162,8 +193,13 @@ static class Commands
         var resultsDir = Path.Combine(root, ".sq", "results");
         if (Directory.Exists(resultsDir)) Directory.Delete(resultsDir, recursive: true);
 
+        // Labs that grade YOUR tests (Lab 03) first run them against deliberately broken code.
         Mutation.RunAll(root, ci, lab is null ? null : int.Parse(lab).ToString("D2"));
 
+        // The graded projects by name, NOT the whole solution. From Lab 09 a capstone grows a UI
+        // project, and a WPF one cannot even build on the Linux machine CI runs on — grading the
+        // solution would turn every lab red because of a window. What is scored is your domain
+        // library (through the contract tests) and your own tests, so those are what get built.
         var exitCode = 0;
         foreach (var project in GradedProjects)
         {
@@ -247,6 +283,7 @@ static class Commands
 
             var extracted = Path.Combine(temp, "x");
             ZipFile.ExtractToDirectory(zipPath, extracted);
+            // GitHub zips contain a single top-level folder, e.g. sharpquest-template-main/
             var official = Directory.GetDirectories(extracted) is [var only] && !File.Exists(Path.Combine(extracted, "sq.cs"))
                 ? only
                 : extracted;
@@ -285,6 +322,7 @@ static class Commands
         }
     }
 
+    /// <summary>The dotnet executable. SQ_DOTNET overrides it (used only to test sq itself).</summary>
     public static string Dotnet => Environment.GetEnvironmentVariable("SQ_DOTNET") ?? "dotnet";
 
     public static int Run(string workingDir, string file, IEnumerable<string> arguments,
@@ -292,7 +330,7 @@ static class Commands
     {
         var psi = new ProcessStartInfo(file) { WorkingDirectory = workingDir, RedirectStandardOutput = quiet, RedirectStandardError = quiet };
         foreach (var a in arguments) psi.ArgumentList.Add(a);
-        foreach (var name in Mutation.EnvNames) psi.Environment.Remove(name);
+        foreach (var name in Mutation.EnvNames) psi.Environment.Remove(name);   // never let a mutant leak into a normal run
         foreach (var (k, v) in env ?? new Dictionary<string, string?>())
             if (v is null) psi.Environment.Remove(k); else psi.Environment[k] = v;
         using var process = Process.Start(psi)!;
@@ -310,6 +348,14 @@ static class Commands
 
 record TestResult(string Group, string Name, bool Passed, bool Skipped, string? Message);
 
+/// <summary>
+/// Mutation testing, for labs that grade the student's own tests.
+/// A lab opts in with contracts/**/mutation.json:
+///   { "lab": "03", "project": "tests/Capstone.Tests/Capstone.Tests.csproj",
+///     "classFilter": "SearchMatcher", "env": "SQ_MUTANT", "mutants": 8 }
+/// Run 0: all of the student's tests, correct code. Runs 1..N: only the spec tests, one mutant each.
+/// Results go to .sq/mutation/LabNN.json, which that lab's contract tests read.
+/// </summary>
 static class Mutation
 {
     public static IEnumerable<string> EnvNames => ["SQ_MUTANT"];
@@ -330,7 +376,7 @@ static class Mutation
             if (!File.Exists(Path.Combine(root, project))) continue;
             Console.WriteLine($"> dotnet build {project} -c {config}   (needed for the mutation check)");
             if (Commands.Run(root, Commands.Dotnet, ["build", project, "-c", config, "-nologo", "-v", "q"], quiet: true) != 0)
-                return;
+                return;   // the main test run will show the build errors
         }
 
         foreach (var spec in specs) RunOne(root, config, spec);
@@ -353,6 +399,7 @@ static class Mutation
         Directory.CreateDirectory(outDir);
         var outFile = Path.Combine(outDir, $"Lab{lab}.json");
 
+        // Same binaries as last time → same answer. Mutation runs are slow; don't repeat them.
         var key = dll is null ? "" : BinariesKey(Path.GetDirectoryName(dll)!, spec.ToJsonString());
         if (File.Exists(outFile) && key.Length > 0 && (string?)JsonNode.Parse(File.ReadAllText(outFile))?["key"] == key)
         {
@@ -395,6 +442,7 @@ static class Mutation
         {
             if (!usable) { mutants[m.ToString()] = new JsonObject { ["caught"] = false, ["ran"] = false }; continue; }
             var run = RunTests(m, onlySpec: true);
+            // A crashed run (no results at all) also counts as caught: the tests noticed something.
             var caught = run.Count == 0 || run.Any(r => !r.Passed && !r.Skipped);
             mutants[m.ToString()] = new JsonObject { ["caught"] = caught, ["ran"] = true };
         }
@@ -403,6 +451,7 @@ static class Mutation
         PrintSummary(lab, result, cached: false);
     }
 
+    /// <summary>Hash of the compiled code that matters (builds are deterministic, so unchanged source = same key).</summary>
     private static string BinariesKey(string binDir, string specText)
     {
         using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
@@ -458,6 +507,7 @@ static class Trx
         }
     }
 
+    /// <summary>"SharpQuest.Contracts.Tests.Lab02.StoreTests" → "02"; anything else → "own".</summary>
     private static string Group(string className)
     {
         var m = Regex.Match(className, @"^SharpQuest\.Contracts\.Tests\.Lab(\d{2})\.");
@@ -466,6 +516,7 @@ static class Trx
 
     private static string ShortName(string testName)
     {
+        // "SharpQuest.Contracts.Tests.Lab02.StoreTests.Added_item(seed: 1)" → "StoreTests.Added_item(seed: 1)"
         var paren = testName.IndexOf('(');
         var head = paren < 0 ? testName : testName[..paren];
         var parts = head.Split('.');
@@ -574,9 +625,14 @@ static class Report
     private static IEnumerable<IGrouping<string, TestResult>> Ordered(IEnumerable<TestResult> results) =>
         results.GroupBy(r => r.Group).OrderBy(g => g.Key == "own" ? "zz" : g.Key);
 
+    /// <summary>
+    /// Contract tests are never skipped on purpose: they skip only when the lab's wiring class is missing.
+    /// So a lab whose every test was skipped hasn't been started.
+    /// </summary>
     private static bool NotStarted(IGrouping<string, TestResult> group) =>
         group.Key != "own" && group.All(r => r.Skipped);
 
+    /// <summary>Failures, with many identical messages (e.g. "no wiring class") folded into one line.</summary>
     private static IEnumerable<(string Name, string Message)> Failures(IEnumerable<TestResult> results)
     {
         foreach (var same in results.Where(r => !r.Passed && !r.Skipped).GroupBy(r => FirstLine(r.Message)))
@@ -604,6 +660,7 @@ static class Report
 
 static class Repo
 {
+    /// <summary>Everything `sq update` and CI overwrite with the official copy.</summary>
     public static readonly string[] Managed =
     [
         "contracts",
@@ -618,6 +675,7 @@ static class Repo
         "sq.sh",
         ".github/workflows/ci.yml",
         "tools/sq/sq.csproj",
+        // The pinned dotnet ef and ilspycmd versions follow the course's .NET version (9 since 2026-10-06).
         ".config/dotnet-tools.json",
     ];
 
@@ -654,6 +712,7 @@ static class Repo
             : [];
     }
 
+    /// <summary>Files that switch nullable checking off. Reported to the instructor, not blocked.</summary>
     public static IEnumerable<string> NullableEscapes(string root)
     {
         var src = Path.Combine(root, "src");
@@ -667,6 +726,7 @@ static class Repo
         }
     }
 
+    /// <summary>Content hash of a file or a folder (paths + contents, line endings normalised). Empty if missing.</summary>
     public static string Hash(string path)
     {
         IEnumerable<string> files =
@@ -697,6 +757,7 @@ static class Repo
             return;
         }
 
+        // A folder: drop the old copy (keeping build output out of the way), then copy the new one in.
         if (Directory.Exists(to))
             foreach (var file in Directory.EnumerateFiles(to, "*", SearchOption.AllDirectories)
                          .Where(f => !f.Split(Path.DirectorySeparatorChar).Any(p => p is "bin" or "obj")))
