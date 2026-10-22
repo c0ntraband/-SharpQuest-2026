@@ -2,7 +2,7 @@ using SharpQuest.Contracts;
 
 namespace Capstone.Core.Models
 {
-    public class Spin : IItem
+    public abstract class Spin : IItem
     {
         public string Id { get; }
         public DateTime Time { get; }
@@ -11,11 +11,15 @@ namespace Capstone.Core.Models
         public int Payout { get; }
         public int CreditsAfter { get; }
 
+        public abstract int Cost { get; }
+
         public bool IsWin => Payout > 0;
 
-        public string DisplayName => $"{Reels} — bet {Bet}, won {Payout}";
+        public string DisplayName => Describe();
 
-        public Spin(string id, DateTime time, int bet, Reels reels, int payout, int creditsAfter)
+        public abstract string Describe();
+
+        protected Spin(string id, DateTime time, int bet, Reels reels, int payout, int creditsAfter)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(id);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bet);

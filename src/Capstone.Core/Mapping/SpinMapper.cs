@@ -18,9 +18,16 @@ namespace Capstone.Core.Mapping
             if (item is not Spin spin)
                 throw new ArgumentException($"SpinMapper only maps spins, not {item.GetType().Name}.", nameof(item));
 
+            var kind = spin switch
+            {
+                PaidSpin => "paid",
+                FreeSpin => "free",
+                _ => throw new ArgumentException("Unknown spin kind.", nameof(item)),
+            };
+
             var dto = new SpinDto(spin.Id, spin.Time, spin.Bet,
                 spin.Reels.Left, spin.Reels.Middle, spin.Reels.Right,
-                spin.Payout, spin.CreditsAfter);
+                spin.Payout, spin.CreditsAfter, kind);
             return JsonSerializer.Serialize(dto, Options);
         }
 
@@ -49,7 +56,14 @@ namespace Capstone.Core.Mapping
 
             try
             {
-                return new Spin(dto.Id, time, bet, new Reels(left, middle, right), payout, creditsAfter);
+                var reels = new Reels(left, middle, right);
+                return dto.Kind switch
+                {
+                    // Older saved spins did not have a kind and were all paid.
+                    null or "paid" => new PaidSpin(dto.Id, time, bet, reels, payout, creditsAfter),
+                    "free" => new FreeSpin(dto.Id, time, bet, reels, payout, creditsAfter),
+                    _ => null,
+                };
             }
             catch (ArgumentException)
             {

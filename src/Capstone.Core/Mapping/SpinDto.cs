@@ -10,5 +10,6 @@ namespace Capstone.Core.Mapping
         Symbol? Middle,
         Symbol? Right,
         int? Payout,
-        int? CreditsAfter);
+        int? CreditsAfter,
+        string? Kind = null);
 }

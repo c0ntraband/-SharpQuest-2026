@@ -13,12 +13,11 @@ const int bet = 5;
 for (var i = 1; i <= 10; i++)
 {
     var reels = machine.NextReels();
-    var payout = paytable.PayoutFor(reels, bet);
+    var spin = PaidSpin.Create($"spin-{i}", DateTime.Now, bet, reels, session.Balance, paytable);
 
-    session.PlaceBet(bet);
-    session.Collect(payout);
+    session.PlaceBet(spin.Cost);
+    session.Collect(spin.Payout);
 
-    var spin = new Spin($"spin-{i}", DateTime.Now, bet, reels, payout, session.Balance);
     spins.Add(spin);
     Console.WriteLine(spin);
 }

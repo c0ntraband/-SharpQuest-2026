@@ -23,7 +23,7 @@ namespace Capstone.Core.Wiring
             var payout = new Paytable().PayoutFor(reels, bet);
             var time = new DateTime(2026, 10, 1, 18, 0, 0).AddSeconds(seed * 10);
 
-            return new Spin($"spin-{seed}", time, bet, reels, payout, creditsAfter: 100 - bet + payout);
+            return new PaidSpin($"spin-{seed}", time, bet, reels, payout, creditsAfter: 100 - bet + payout);
         }
     }
 }
