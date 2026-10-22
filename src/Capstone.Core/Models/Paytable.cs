@@ -1,42 +1,28 @@
+using static Capstone.Core.Models.Symbol;
+
 namespace Capstone.Core.Models
 {
     public class Paytable : IPaytable
     {
-        private const int CherryPairMultiplier = 2;
-
-        private static readonly Dictionary<Symbol, int> LineMultipliers = new()
-        {
-            [Symbol.Cherry] = 5,
-            [Symbol.Lemon] = 10,
-            [Symbol.Bell] = 20,
-            [Symbol.Bar] = 50,
-            [Symbol.Seven] = 100,
-        };
-
         public int PayoutFor(Reels reels, int bet)
         {
-            var line = CompletedLine(reels);
-            if (line is not null) return LineMultipliers[line.Value] * bet;
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bet);
 
-            return CherriesWithWilds(reels) >= 2 ? CherryPairMultiplier * bet : 0;
-        }
-
-        private static Symbol? CompletedLine(Reels reels)
-        {
-            var shown = new[] { reels.Left, reels.Middle, reels.Right }
-                .Where(s => s != Symbol.Wild)
-                .Distinct()
-                .ToList();
-
-            return shown.Count switch
+            // Highest-paying lines come first because wilds can match several rules.
+            var multiplier = reels switch
             {
-                0 => Symbol.Seven,
-                1 => shown[0],
-                _ => null,
+                (Seven or Wild, Seven or Wild, Seven or Wild) => 100,
+                (Bar or Wild, Bar or Wild, Bar or Wild) => 50,
+                (Bell or Wild, Bell or Wild, Bell or Wild) => 20,
+                (Lemon or Wild, Lemon or Wild, Lemon or Wild) => 10,
+                (Cherry or Wild, Cherry or Wild, Cherry or Wild) => 5,
+                (Cherry or Wild, Cherry or Wild, _)
+                    or (Cherry or Wild, _, Cherry or Wild)
+                    or (_, Cherry or Wild, Cherry or Wild) => 2,
+                _ => 0,
             };
-        }
 
-        private static int CherriesWithWilds(Reels reels) =>
-            new[] { reels.Left, reels.Middle, reels.Right }.Count(s => s is Symbol.Cherry or Symbol.Wild);
+            return multiplier * bet;
+        }
     }
 }
