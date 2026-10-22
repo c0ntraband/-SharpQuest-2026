@@ -8,7 +8,6 @@ namespace Capstone.Core.Models
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bet);
 
-            // Highest-paying lines come first because wilds can match several rules.
             var multiplier = reels switch
             {
                 (Seven or Wild, Seven or Wild, Seven or Wild) => 100,

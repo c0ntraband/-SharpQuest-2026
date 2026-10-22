@@ -59,7 +59,6 @@ namespace Capstone.Core.Mapping
                 var reels = new Reels(left, middle, right);
                 return dto.Kind switch
                 {
-                    // Older saved spins did not have a kind and were all paid.
                     null or "paid" => new PaidSpin(dto.Id, time, bet, reels, payout, creditsAfter),
                     "free" => new FreeSpin(dto.Id, time, bet, reels, payout, creditsAfter),
                     _ => null,

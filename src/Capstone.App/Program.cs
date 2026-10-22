@@ -13,7 +13,6 @@ const int bet = 5;
 for (var i = 1; i <= 10; i++)
 {
     var reels = machine.NextReels();
-    // Every third spin is free so the demo exercises both implementations.
     Spin spin = i % 3 == 0
         ? FreeSpin.Create($"spin-{i}", DateTime.Now, bet, reels, session.Balance, paytable)
         : PaidSpin.Create($"spin-{i}", DateTime.Now, bet, reels, session.Balance, paytable);

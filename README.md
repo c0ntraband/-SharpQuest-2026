@@ -12,25 +12,6 @@
 
 ---
 
-## Session 4: spin types and pattern matching
-
-The slot machine has an abstract `Spin` base class with two kinds:
-
-- `PaidSpin` costs the bet and pays the regular paytable amount.
-- `FreeSpin` costs zero and pays twice the regular amount. Its `Bet` is the reference stake used to calculate winnings, so it can run even with an empty balance.
-
-Each kind implements `Cost` and `Describe()`. Its `Create` method calculates its payout and resulting balance. The console loop holds each result as a `Spin`, then uses those members to charge, collect and describe it. Every third spin in the demo is free.
-
-`Paytable.PayoutFor` uses a `reels switch` expression. Matching sevens pay 100 times the bet, bars 50, bells 20, lemons 10 and cherries 5. Any two cherries pay 2 times the bet; everything else pays zero. Wilds substitute for any symbol, and the highest-paying matching rule comes first.
-
-Saved JSON includes the spin kind so both kinds survive a round trip. Older JSON without a kind loads as a paid spin.
-
-`Lab04Wiring` connects the contract tests to `Spin`, `PaidSpin` and `FreeSpin`. It delegates to `SpinOperations`: `DescribeAll` calls each override in one loop, `Classify` uses a type-pattern switch with fallback and null handling, `TryFindByName` returns an exact display-name match through `out`, and `AddAll` accepts `params` while keeping the store's duplicate and null checks.
-
-`Lab03Wiring` connects display-name search through `SearchMatcher`. The search tests cover its eight rules; run `sq test` to check Labs 02, 03 and 04 together, including the Lab 03 mutation checks.
-
-Run the demo with `dotnet run --project src/Capstone.App` and the tests with `sq test` (PowerShell: `.\sq test`).
-
 ## Getting your own copy (session 1, browser only)
 
 1. On the course template page (<https://github.com/x86bogdan/sharpquest-2026>), click **Use this template → Create a new repository**. Not *Fork*: a fork of a public repository is public.

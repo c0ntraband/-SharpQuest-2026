@@ -18,7 +18,6 @@ namespace Capstone.Core.Models
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bet);
             ArgumentOutOfRangeException.ThrowIfNegative(creditsBefore);
 
-            // Bet is the reference stake for winnings; it is never deducted.
             var payout = checked(paytable.PayoutFor(reels, bet) * BonusMultiplier);
             return new FreeSpin(id, time, bet, reels, payout, checked(creditsBefore + payout));
         }
