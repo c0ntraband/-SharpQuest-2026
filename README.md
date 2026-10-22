@@ -25,6 +25,10 @@ Each kind implements `Cost` and `Describe()`. Its `Create` method calculates its
 
 Saved JSON includes the spin kind so both kinds survive a round trip. Older JSON without a kind loads as a paid spin.
 
+`Lab04Wiring` connects the contract tests to `Spin`, `PaidSpin` and `FreeSpin`. It delegates to `SpinOperations`: `DescribeAll` calls each override in one loop, `Classify` uses a type-pattern switch with fallback and null handling, `TryFindByName` returns an exact display-name match through `out`, and `AddAll` accepts `params` while keeping the store's duplicate and null checks.
+
+`Lab03Wiring` connects display-name search through `SearchMatcher`. The search tests cover its eight rules; run `sq test` to check Labs 02, 03 and 04 together, including the Lab 03 mutation checks.
+
 Run the demo with `dotnet run --project src/Capstone.App` and the tests with `sq test` (PowerShell: `.\sq test`).
 
 ## Getting your own copy (session 1, browser only)

@@ -15,7 +15,7 @@ namespace Capstone.Core.Models
 
         public bool IsWin => Payout > 0;
 
-        public string DisplayName => Describe();
+        public string DisplayName => $"{Reels} — bet {Bet}, won {Payout}";
 
         public abstract string Describe();
 

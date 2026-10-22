@@ -9,6 +9,18 @@ public class SpinTests
     private readonly Paytable _paytable = new();
 
     [Fact]
+    public void Descriptions_add_kind_specific_behaviour_beyond_the_display_name()
+    {
+        Spin paid = PaidSpin.Create("paid-1", Time, 5, CherryPair, 100, _paytable);
+        Spin free = FreeSpin.Create("free-1", Time, 5, CherryPair, 100, _paytable);
+
+        Assert.NotEqual(paid.DisplayName, paid.Describe());
+        Assert.NotEqual(free.DisplayName, free.Describe());
+        Assert.Contains("cost 5", paid.Describe());
+        Assert.Contains("2x payout", free.Describe());
+    }
+
+    [Fact]
     public void A_paid_spin_deducts_the_bet_and_collects_the_regular_payout()
     {
         var spin = PaidSpin.Create("paid-1", Time, 5, CherryPair, 100, _paytable);
